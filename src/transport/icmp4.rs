@@ -41,10 +41,11 @@ pub const ICMP4_UNREACH_ISOLATED : u8 =     8;       /* src host isolated */
 pub const ICMP4_UNREACH_NET_PROHIB : u8 =   9;       /* net denied */
 pub const ICMP4_UNREACH_HOST_PROHIB : u8 =  10;      /* host denied */
 pub const ICMP4_UNREACH_TOSNET : u8 =       11;      /* bad tos for net */
-pub const ICMP4_UNREACH_TOSHOST : u8 =      12;     /* bad tos for host */
-pub const ICMP4_UNREACH_FILTER_PROHIB: u8 = 13;     /* admin prohib */
-pub const ICMP4_UNREACH_HOST_PRECEDENCE:u8= 14;     /* host prec vio. */
-pub const ICMP4_UNREACH_PRECEDENCE_CUTOFF: u8= 15;      /* prec cutoff */
+pub const ICMP4_UNREACH_TOSHOST : u8 =      12;      /* bad tos for host */
+pub const ICMP4_UNREACH_FILTER_PROHIB: u8 = 13;      /* admin prohib */
+pub const ICMP4_UNREACH_HOST_PRECEDENCE:u8= 14;      /* host prec vio. */
+pub const ICMP4_UNREACH_PRECEDENCE_CUTOFF: u8= 15;   /* prec cutoff */
+pub const ICMP4_UNREACH_UNKNOWN: u8 =       255;
 
 
 /// Icmp Dest Unreachables, Time Exceeded, and other Icmp packet types
@@ -63,16 +64,46 @@ pub const ICMP4_UNREACH_PRECEDENCE_CUTOFF: u8= 15;      /* prec cutoff */
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Icmp4DestinationUnreachable {
     Network = ICMP4_UNREACH_NET as isize,
-    Host = ICMP4_UNREACH_HOST_UNKNOWN as isize,
-    Port = ICMP4_UNREACH_PORT as isize,
+    Host = ICMP4_UNREACH_HOST as isize,
     Protocol = ICMP4_UNREACH_PROTOCOL as isize,
-    // TODO, fill in more
+    Port = ICMP4_UNREACH_PORT as isize,
+    NeedDefrag = ICMP4_UNREACH_NEEDFRAG as isize,
+    SourceFail = ICMP4_UNREACH_SRCFAIL as isize,
+    NetworkUnknown = ICMP4_UNREACH_NET_UNKNOWN as isize,
+    HostUnknown = ICMP4_UNREACH_HOST_UNKNOWN as isize,
+    Isolated = ICMP4_UNREACH_ISOLATED as isize,
+    NetworkProhibited = ICMP4_UNREACH_NET_PROHIB as isize,
+    HostProhibitive = ICMP4_UNREACH_HOST_PROHIB as isize,
+    TosNetwork = ICMP4_UNREACH_TOSNET as isize,
+    TosHost = ICMP4_UNREACH_TOSHOST as isize,
+    FilterProhibited = ICMP4_UNREACH_FILTER_PROHIB as isize,
+    HostPrecidence = ICMP4_UNREACH_HOST_PRECEDENCE as isize,
+    PrecedenceCutoff = ICMP4_UNREACH_PRECEDENCE_CUTOFF as isize,
+    Unknown = ICMP4_UNREACH_UNKNOWN as isize,
 }
 
 impl Icmp4DestinationUnreachable {
-    pub fn from(_icmp_code: u8) -> Icmp4DestinationUnreachable {
-        // TODO ... fill in the map
-        Icmp4DestinationUnreachable::Host
+    pub fn from(icmp_code: u8) -> Icmp4DestinationUnreachable {
+        use Icmp4DestinationUnreachable::*;
+        match icmp_code {
+            ICMP4_UNREACH_NET => Network,
+            ICMP4_UNREACH_HOST => Host,
+            ICMP4_UNREACH_PROTOCOL => Protocol,
+            ICMP4_UNREACH_PORT => Port,
+            ICMP4_UNREACH_NEEDFRAG => NeedDefrag,
+            ICMP4_UNREACH_SRCFAIL => SourceFail,
+            ICMP4_UNREACH_NET_UNKNOWN => NetworkUnknown,
+            ICMP4_UNREACH_HOST_UNKNOWN => HostUnknown,
+            ICMP4_UNREACH_ISOLATED => Isolated,
+            ICMP4_UNREACH_NET_PROHIB => NetworkProhibited,
+            ICMP4_UNREACH_HOST_PROHIB => HostProhibitive,
+            ICMP4_UNREACH_TOSNET => TosNetwork,
+            ICMP4_UNREACH_TOSHOST => TosHost,
+            ICMP4_UNREACH_FILTER_PROHIB => FilterProhibited,
+            ICMP4_UNREACH_HOST_PRECEDENCE => HostPrecidence,
+            ICMP4_UNREACH_PRECEDENCE_CUTOFF => PrecedenceCutoff,
+            _ => Unknown,
+        }
     }
 }
 
@@ -135,7 +166,7 @@ impl Icmp4Type {
 
     /// Return the icmp_type, icmp_code, and the second 4 bytes
     /// of the ICMP payload, in big endian format
-    fn to_be_wire(&self) -> (u8, u8, u32) {
+    pub fn to_be_wire(&self) -> (u8, u8, u32) {
         use Icmp4Type::*;
         match &self {
             Raw{icmp_type, icmp_code, four_bytes} => (*icmp_type, *icmp_code, *four_bytes),
